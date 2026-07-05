@@ -18,7 +18,8 @@ async def create_room(data: RoomCreate, db: DbSession, response: Response):
         value=result.token,
         httponly=True,
         max_age=24 * 60 * 60,
-        samesite="lax"
+        samesite="none",
+        secure=True
     )
     return result
 
@@ -30,7 +31,8 @@ async def join_room(data: RoomJoin, db: DbSession, response: Response):
         value=result.token,
         httponly=True,
         max_age=24 * 60 * 60,
-        samesite="lax"
+        samesite="none",
+        secure=True
     )
     return result
 
