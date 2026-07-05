@@ -1,5 +1,7 @@
 # pyrefly: ignore [missing-import]
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
+import json
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "ChatMinds API"
@@ -10,6 +12,18 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379/0"
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost", "http://localhost:8080"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, str):
+            try:
+                return json.loads(v)
+            except ValueError:
+                return [i.strip() for i in v.split(",")]
+        return v
 
     class Config:
         env_file = ".env"
