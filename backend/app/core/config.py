@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440 # 24 hours
     DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379/0"
-    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost", "http://localhost:8080"]
+    CORS_ORIGINS: str | list[str] = ["http://localhost:5173", "http://localhost", "http://localhost:8080"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
