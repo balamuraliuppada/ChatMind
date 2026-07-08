@@ -56,7 +56,6 @@ export default function Room() {
         // Connect Socket
         newSocket = io(socketUrl, {
           path: '/socket.io/',
-          transports: ['websocket'],
           withCredentials: true,
           auth: {
             token: localStorage.getItem('chatminds_token')

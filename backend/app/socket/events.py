@@ -33,29 +33,36 @@ async def connect(sid, environ, auth):
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         participant_id = payload.get("sub")
         room_id = payload.get("room_id")
+        display_name = payload.get("display_name", "Unknown User")
+        
+        # Fire-and-forget DB update for socket_id to prevent holding up the connection
+        import asyncio
+        asyncio.create_task(update_socket_id(participant_id, sid))
 
+        sio.enter_room(sid, str(room_id))
+        
+        # Save session data in socket
+        async with sio.session(sid) as session:
+            session['participant_id'] = str(participant_id)
+            session['room_id'] = str(room_id)
+            session['display_name'] = display_name
+
+        await sio.emit('user_joined', {'participant_id': str(participant_id), 'display_name': display_name}, room=str(room_id))
+
+    except Exception as e:
+        print(f"Connection error: {e}")
+        return False
+        
+async def update_socket_id(participant_id: str, sid: str):
+    try:
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(Participant).filter(Participant.id == participant_id))
             participant = result.scalars().first()
-            if not participant:
-                return False
-                
-            display_name = participant.display_name
-            participant.socket_id = sid
-            await db.commit()
-            
-            sio.enter_room(sid, str(room_id))
-            
-            # Save session data in socket
-            async with sio.session(sid) as session:
-                session['participant_id'] = str(participant_id)
-                session['room_id'] = str(room_id)
-                session['display_name'] = display_name
-
-            await sio.emit('user_joined', {'participant_id': str(participant_id), 'display_name': display_name}, room=str(room_id))
-
+            if participant:
+                participant.socket_id = sid
+                await db.commit()
     except Exception as e:
-        return False
+        print(f"Failed to update socket_id: {e}")
 
 @sio.on('disconnect')
 async def disconnect(sid):
@@ -99,14 +106,20 @@ async def handle_message(sid, data):
             
             await db.commit()
 
-            await sio.emit('new_message', {
-                'id': msg_id,
-                'room_id': room_id,
-                'sender_id': participant_id,
-                'sender_name': display_name,
-                'message': msg_text,
-                'created_at': msg_created_at
-            }, room=str(room_id))
+            try:
+                print(f"Broadcasting to room {str(room_id)}: {msg_text}")
+                await sio.emit('new_message', {
+                    'id': msg_id,
+                    'room_id': room_id,
+                    'sender_id': participant_id,
+                    'sender_name': display_name,
+                    'message': msg_text,
+                    'created_at': msg_created_at
+                }, room=str(room_id))
+                return {"status": "success"}
+            except Exception as e:
+                print(f"Broadcast error: {e}")
+                return {"status": "error", "message": str(e)}
 
 @sio.on('typing')
 async def handle_typing(sid, data):

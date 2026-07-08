@@ -17,9 +17,9 @@ def generate_room_code() -> str:
     alphabet = string.ascii_uppercase + string.digits
     return ''.join(secrets.choice(alphabet) for i in range(6))
 
-def create_session_token(participant_id: str, room_id: str) -> str:
+def create_session_token(participant_id: str, room_id: str, display_name: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"exp": expire, "sub": str(participant_id), "room_id": str(room_id)}
+    to_encode = {"exp": expire, "sub": str(participant_id), "room_id": str(room_id), "display_name": display_name}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
@@ -54,7 +54,7 @@ async def create_room(db: AsyncSession, data: RoomCreate) -> RoomDetailResponse:
     await db.refresh(participant)
     
     # 3. Create token
-    token = create_session_token(participant.id, new_room.id)
+    token = create_session_token(participant.id, new_room.id, participant.display_name)
     
     return RoomDetailResponse(
         room=RoomResponse.model_validate(new_room),
@@ -85,7 +85,7 @@ async def join_room(db: AsyncSession, data: RoomJoin) -> RoomDetailResponse:
     await db.refresh(participant)
     
     # 3. Create token
-    token = create_session_token(participant.id, room.id)
+    token = create_session_token(participant.id, room.id, participant.display_name)
     
     return RoomDetailResponse(
         room=RoomResponse.model_validate(room),
