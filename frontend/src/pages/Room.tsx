@@ -19,7 +19,7 @@ export default function Room() {
   const { 
     socket, setSocket,
     messages, setMessages, addMessage,
-    addParticipant, removeParticipant,
+    addParticipant, removeParticipant, setParticipants,
     roomCode, setRoomCode,
     currentUserId, setCurrentUserId,
     participants
