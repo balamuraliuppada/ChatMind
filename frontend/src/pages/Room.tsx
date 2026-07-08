@@ -20,7 +20,8 @@ export default function Room() {
     messages, setMessages, addMessage,
     addParticipant, removeParticipant,
     roomCode, setRoomCode,
-    currentUserId, setCurrentUserId
+    currentUserId, setCurrentUserId,
+    participants
   } = useChatStore();
 
   useEffect(() => {
@@ -152,7 +153,7 @@ export default function Room() {
           <div className="mt-8">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Participants ({participants.length})</h3>
             <div className="space-y-2">
-              {participants.map((p) => (
+              {participants.map((p: any) => (
                 <div key={p.id} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                     {p.display_name.charAt(0).toUpperCase()}
