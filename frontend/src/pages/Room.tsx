@@ -148,6 +148,22 @@ export default function Room() {
               <Copy size={16} />
             </div>
           </div>
+
+          <div className="mt-8">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Participants ({participants.length})</h3>
+            <div className="space-y-2">
+              {participants.map((p) => (
+                <div key={p.id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                    {p.display_name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-slate-200">
+                    {p.display_name} {p.id === currentUserId && "(You)"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

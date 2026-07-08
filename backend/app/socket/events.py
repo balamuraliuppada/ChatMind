@@ -7,8 +7,7 @@ from app.models.message import Message
 from app.models.room import Room
 from app.core.config import settings
 
-mgr = socketio.AsyncRedisManager(settings.REDIS_URL)
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*', client_manager=mgr)
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 
 async def get_participant(sid: str, room_id: str):
     async with AsyncSessionLocal() as db:
