@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Response, status
 from app.schemas.room import RoomCreate, RoomJoin, RoomDetailResponse, ParticipantResponse
 from app.schemas.chat import MessageResponse
 from app.services import room_service
-from app.api.deps import DbSession, get_current_user_payload
+from app.api.deps import DbSession, get_current_user_payload, get_session_token
 from app.models.message import Message
 # pyrefly: ignore [missing-import]
 from sqlalchemy.future import select
@@ -39,7 +39,8 @@ async def join_room(data: RoomJoin, db: DbSession, response: Response):
 @router.get("/rooms/me", response_model=RoomDetailResponse)
 async def get_current_room(
     db: DbSession, 
-    payload: dict = Depends(get_current_user_payload)
+    payload: dict = Depends(get_current_user_payload),
+    token: str = Depends(get_session_token)
 ):
     participant_id = payload.get("sub")
     room_id = payload.get("room_id")
@@ -63,7 +64,7 @@ async def get_current_room(
     return RoomDetailResponse(
         room=RoomResponse.model_validate(room),
         participant=ParticipantResponse.model_validate(participant),
-        token="existing" # Dummy, token is in cookie
+        token=token
     )
 
 @router.post("/rooms/leave", status_code=status.HTTP_204_NO_CONTENT)
