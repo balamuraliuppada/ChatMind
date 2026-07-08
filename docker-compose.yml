@@ -24,7 +24,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:sio_asgi_app --host 0.0.0.0 --port 8000 --reload
     environment:
       - DATABASE_URL=postgresql+asyncpg://chatminds_user:chatminds_password@db/chatminds
       - REDIS_URL=redis://redis:6379/0
