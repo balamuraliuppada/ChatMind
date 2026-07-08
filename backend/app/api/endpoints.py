@@ -94,3 +94,15 @@ async def get_messages(
     )
     messages = result.scalars().all()
     return [MessageResponse.model_validate(m) for m in messages]
+
+@router.get("/rooms/{room_id}/participants", response_model=list[ParticipantResponse])
+async def get_participants(
+    room_id: str,
+    db: DbSession,
+    payload: dict = Depends(get_current_user_payload)
+):
+    if str(payload.get("room_id")) != str(room_id):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not authorized for this room")
+        
+    return await room_service.get_room_participants(db, room_id)
