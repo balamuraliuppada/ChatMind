@@ -40,6 +40,7 @@ async def connect(sid, environ, auth):
             if not participant:
                 return False
                 
+            display_name = participant.display_name
             participant.socket_id = sid
             await db.commit()
             
@@ -49,9 +50,9 @@ async def connect(sid, environ, auth):
             async with sio.session(sid) as session:
                 session['participant_id'] = str(participant_id)
                 session['room_id'] = str(room_id)
-                session['display_name'] = participant.display_name
+                session['display_name'] = display_name
 
-            await sio.emit('user_joined', {'participant_id': str(participant_id), 'display_name': participant.display_name}, room=str(room_id))
+            await sio.emit('user_joined', {'participant_id': str(participant_id), 'display_name': display_name}, room=str(room_id))
 
     except Exception as e:
         return False
@@ -85,17 +86,23 @@ async def handle_message(sid, data):
                 message=msg_text
             )
             db.add(new_message)
+            await db.flush()
+            
+            # Extract attributes before commit to avoid async lazy-loading errors
+            msg_id = str(new_message.id)
+            from datetime import datetime, timezone
+            msg_created_at = new_message.created_at.isoformat() if new_message.created_at else datetime.now(timezone.utc).isoformat()
+            
             await db.commit()
-            await db.refresh(new_message)
 
             await sio.emit('new_message', {
-                'id': str(new_message.id),
+                'id': msg_id,
                 'room_id': room_id,
                 'sender_id': participant_id,
                 'sender_name': display_name,
                 'message': msg_text,
-                'created_at': new_message.created_at.isoformat()
-            }, room=room_id)
+                'created_at': msg_created_at
+            }, room=str(room_id))
 
 @sio.on('typing')
 async def handle_typing(sid, data):
