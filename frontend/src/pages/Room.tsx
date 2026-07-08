@@ -48,7 +48,7 @@ export default function Room() {
           path: '/socket.io/',
           withCredentials: true,
           auth: {
-            token: roomData.token
+            token: localStorage.getItem('chatminds_token')
           }
         });
 
@@ -57,7 +57,7 @@ export default function Room() {
         });
 
         newSocket.on('user_joined', (user: any) => {
-          addParticipant(user);
+          addParticipant({ id: user.participant_id, display_name: user.display_name });
         });
 
         newSocket.on('user_left', (user: any) => {
@@ -120,7 +120,10 @@ export default function Room() {
   };
 
   const handleLeave = async () => {
-    await api.post('/rooms/leave');
+    localStorage.removeItem('chatminds_token');
+    try {
+      await api.post('/rooms/leave');
+    } catch (e) {}
     navigate('/');
   };
 
@@ -129,42 +132,36 @@ export default function Room() {
   }
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-screen">
-      {/* Sidebar */}
-      <div className="w-full md:w-80 glass-panel md:border-r border-white/10 flex flex-col shrink-0 z-20">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-xl tracking-tight text-white">ChatMinds</h2>
-            <button onClick={handleLeave} className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors" title="Leave Room">
-              <LogOut size={18} />
+    <div className="flex-1 flex flex-col h-screen max-w-4xl mx-auto w-full">
+      {/* Top Header */}
+      <div className="bg-panel border-b border-white/10 p-4 flex items-center justify-between z-20">
+        <div>
+          <h2 className="font-bold text-xl text-white mb-1">ChatMinds</h2>
+          <div className="flex items-center gap-2 text-xs font-medium">
+            <span className="text-slate-400">Code:</span>
+            <span className="text-primary tracking-widest">{roomCode}</span>
+            <button onClick={copyCode} className="text-slate-500 hover:text-white transition-colors">
+              <Copy size={12} />
             </button>
-          </div>
-          
-          <div className="bg-darker/50 p-4 rounded-xl border border-white/5 flex justify-between items-center group cursor-pointer" onClick={copyCode}>
-            <div>
-              <p className="text-xs text-slate-400 mb-1 font-medium uppercase tracking-wider">Room Code</p>
-              <p className="font-mono text-xl text-primary font-bold tracking-widest">{roomCode}</p>
-            </div>
-            <div className="p-2 bg-primary/10 text-primary rounded-lg group-hover:bg-primary group-hover:text-white transition-all">
-              <Copy size={16} />
+            <span className="mx-2 text-slate-700">|</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+              <span className="text-green-400">Connected</span>
             </div>
           </div>
-
-          <div className="mt-8">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Participants ({participants.length})</h3>
-            <div className="space-y-2">
-              {participants.map((p: any) => (
-                <div key={p.id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                    {p.display_name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="text-sm font-medium text-slate-200">
-                    {p.display_name} {p.id === currentUserId && "(You)"}
-                  </span>
-                </div>
-              ))}
-            </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex -space-x-2 mr-2">
+            {participants.map((p: any) => (
+              <div key={p.id} className="w-8 h-8 rounded-full border-2 border-panel bg-primary/20 flex items-center justify-center text-primary font-bold text-xs" title={p.display_name}>
+                {p.display_name.charAt(0).toUpperCase()}
+              </div>
+            ))}
           </div>
+          <button onClick={handleLeave} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium">
+            <LogOut size={16} /> <span className="hidden sm:inline">Leave</span>
+          </button>
         </div>
       </div>
 

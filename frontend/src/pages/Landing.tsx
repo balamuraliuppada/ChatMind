@@ -29,9 +29,11 @@ export default function Landing() {
           return;
         }
         const res = await api.post('/rooms/join', { room_code: roomCode, display_name: displayName });
+        localStorage.setItem('chatminds_token', res.data.token);
         navigate(`/room/${res.data.room.id}`);
       } else {
         const res = await api.post('/rooms', { display_name: displayName });
+        localStorage.setItem('chatminds_token', res.data.token);
         navigate(`/room/${res.data.room.id}`);
       }
     } catch (err: any) {
