@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Broadcast Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.IO Broadcast Test</h1>
+    <button onclick="testGlobalBroadcast()">Trigger Global Broadcast via API</button>
+    <div id="messages"></div>
+
+    <script>
+        const socket = io("https://chatminds-backend.onrender.com", {
+            path: '/socket.io/',
+            withCredentials: true
+        });
+
+        socket.on("connect", () => {
+            console.log("Connected to Socket.IO:", socket.id);
+            addMessage("Connected! Waiting for messages...");
+        });
+
+        socket.on("new_message", (msg) => {
+            console.log("RECEIVED:", msg);
+            addMessage("Received broadcast: " + (msg.message || JSON.stringify(msg)));
+        });
+        
+        socket.on("user_joined", (msg) => {
+            console.log("USER JOINED:", msg);
+            addMessage("User joined: " + JSON.stringify(msg));
+        });
+
+        function addMessage(text) {
+            const el = document.createElement('div');
+            el.innerText = text;
+            document.getElementById("messages").appendChild(el);
+        }
+
+        async function testGlobalBroadcast() {
+            try {
+                const randomMsg = "Test " + Math.floor(Math.random() * 10000);
+                addMessage("Triggering API for: " + randomMsg);
+                await fetch("https://chatminds-backend.onrender.com/api/v1/test_ws/" + randomMsg);
+            } catch (e) {
+                addMessage("API Error: " + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

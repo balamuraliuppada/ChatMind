@@ -106,3 +106,19 @@ async def get_participants(
         raise HTTPException(status_code=403, detail="Not authorized for this room")
         
     return await room_service.get_room_participants(db, room_id)
+
+@router.get("/test_ws/{msg}")
+async def test_ws_broadcast(msg: str):
+    from app.socket.events import sio
+    import uuid
+    from datetime import datetime, timezone
+    print(f"API Triggering broadcast: {msg}")
+    await sio.emit('new_message', {
+        'id': str(uuid.uuid4()),
+        'room_id': 'test-room',
+        'sender_id': 'system',
+        'sender_name': 'System',
+        'message': msg,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    return {"status": "broadcast_sent"}
