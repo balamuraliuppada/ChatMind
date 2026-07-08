@@ -46,6 +46,7 @@ export default function Room() {
         // Connect Socket
         newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000', {
           path: '/socket.io/',
+          transports: ['websocket'],
           withCredentials: true,
           auth: {
             token: localStorage.getItem('chatminds_token')
@@ -87,7 +88,10 @@ export default function Room() {
     initRoom();
 
     return () => {
-      if (newSocket) newSocket.disconnect();
+      if (newSocket) {
+        newSocket.disconnect();
+      }
+      setSocket(null);
     };
   }, [roomId]);
 
