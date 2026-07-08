@@ -76,11 +76,15 @@ async def handle_message(sid, data):
         display_name = session.get('display_name')
         
         msg_text = data.get('message')
+        client_id = data.get('id')
         if not msg_text or not room_id or not participant_id:
             return
 
         async with AsyncSessionLocal() as db:
+            import uuid
+            new_msg_id = uuid.UUID(client_id) if client_id else uuid.uuid4()
             new_message = Message(
+                id=new_msg_id,
                 room_id=room_id,
                 sender_id=participant_id,
                 message=msg_text

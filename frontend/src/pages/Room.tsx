@@ -11,6 +11,7 @@ export default function Room() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
   const [msgInput, setMsgInput] = useState('');
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,8 +44,17 @@ export default function Room() {
         const { data: initialMessages } = await api.get(`/rooms/${roomId}/messages`);
         setMessages(initialMessages);
 
+        const { data: initialParticipants } = await api.get(`/rooms/${roomId}/participants`);
+        setParticipants(initialParticipants);
+
+        let socketUrl = import.meta.env.VITE_SOCKET_URL || 
+                          (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
+        if (socketUrl.endsWith('/')) {
+          socketUrl = socketUrl.slice(0, -1);
+        }
+        
         // Connect Socket
-        newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000', {
+        newSocket = io(socketUrl, {
           path: '/socket.io/',
           transports: ['websocket'],
           withCredentials: true,
@@ -55,6 +65,16 @@ export default function Room() {
 
         newSocket.on('connect', () => {
           console.log('Connected to socket');
+          setIsConnected(true);
+        });
+
+        newSocket.on('disconnect', () => {
+          setIsConnected(false);
+        });
+
+        newSocket.on('connect_error', (err: any) => {
+          console.error('Socket connection error:', err);
+          setIsConnected(false);
         });
 
         newSocket.on('user_joined', (user: any) => {
@@ -66,6 +86,7 @@ export default function Room() {
         });
 
         newSocket.on('new_message', (msg: any) => {
+          console.log('Received new_message:', msg);
           addMessage(msg);
         });
 
@@ -97,9 +118,21 @@ export default function Room() {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!msgInput.trim() || !socket) return;
+    if (!msgInput.trim() || !socket || !currentUserId || !roomId) return;
     
-    socket.emit('message', { message: msgInput.trim() });
+    const msgId = crypto.randomUUID();
+    
+    // Optimistic UI Update
+    addMessage({
+      id: msgId,
+      room_id: roomId,
+      sender_id: currentUserId,
+      sender_name: "You",
+      message: msgInput.trim(),
+      created_at: new Date().toISOString()
+    });
+    
+    socket.emit('message', { id: msgId, message: msgInput.trim() });
     setMsgInput('');
     socket.emit('typing', { is_typing: false });
   };
@@ -149,8 +182,10 @@ export default function Room() {
             </button>
             <span className="mx-2 text-slate-700">|</span>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
-              <span className="text-green-400">Connected</span>
+              <div className={clsx("w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]", isConnected ? "bg-green-500 shadow-green-500/50" : "bg-red-500 shadow-red-500/50")}></div>
+              <span className={isConnected ? "text-green-400" : "text-red-400"}>
+                {isConnected ? "Connected" : "Disconnected"}
+              </span>
             </div>
           </div>
         </div>
