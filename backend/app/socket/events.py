@@ -107,7 +107,7 @@ async def handle_message(sid, data):
             await db.commit()
 
             try:
-                print(f"Broadcasting to room {str(room_id)}: {msg_text}")
+                print(f"Broadcasting globally: {msg_text}")
                 await sio.emit('new_message', {
                     'id': msg_id,
                     'room_id': room_id,
@@ -115,7 +115,7 @@ async def handle_message(sid, data):
                     'sender_name': display_name,
                     'message': msg_text,
                     'created_at': msg_created_at
-                }, room=str(room_id))
+                })
                 return {"status": "success"}
             except Exception as e:
                 print(f"Broadcast error: {e}")

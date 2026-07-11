@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.IO Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+
+    <script>
+        // Setup tokens (you would normally get these from login API)
+        // Let's just create a room and get a token
+        async function runTest() {
+            try {
+                // 1. Create Room (Alice)
+                const res = await fetch("https://chatminds-backend.onrender.com/api/v1/rooms", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ display_name: "TestUser" })
+                });
+                const data = await res.json();
+                console.log("Room created:", data);
+                const token = data.token;
+
+                // 2. Connect
+                const socket = io("https://chatminds-backend.onrender.com", {
+                    path: '/socket.io/',
+                    withCredentials: true,
+                    auth: { token: token }
+                });
+
+                socket.on("connect", () => {
+                    document.getElementById("status").innerText = "Connected: " + socket.id;
+                    console.log("Connected!");
+                    
+                    // Send a message after 1 second
+                    setTimeout(() => {
+                        console.log("Sending message...");
+                        socket.emit("message", { id: "12345678-1234-1234-1234-123456789012", message: "Hello from raw HTML!" });
+                    }, 1000);
+                });
+
+                socket.on("new_message", (msg) => {
+                    console.log("RECEIVED BROADCAST!", msg);
+                    const el = document.createElement('div');
+                    el.innerText = "Received: " + msg.message;
+                    document.getElementById("messages").appendChild(el);
+                });
+
+                socket.on("connect_error", (err) => {
+                    document.getElementById("status").innerText = "Error: " + err.message;
+                });
+            } catch (e) {
+                document.getElementById("status").innerText = "Error: " + e;
+            }
+        }
+        runTest();
+    </script>
+</body>
+</html>
