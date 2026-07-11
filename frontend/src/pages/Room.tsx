@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import { Copy, LogOut, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -53,49 +52,50 @@ export default function Room() {
           socketUrl = socketUrl.slice(0, -1);
         }
         
+        // Convert http/https to ws/wss
+        const wsUrl = socketUrl.replace(/^http/, 'ws');
+        const token = localStorage.getItem('chatminds_token');
+        
         // Connect Socket
-        newSocket = io(socketUrl, {
-          path: '/socket.io/',
-          withCredentials: true,
-          auth: {
-            token: localStorage.getItem('chatminds_token')
-          }
-        });
+        newSocket = new WebSocket(`${wsUrl}/ws?token=${token}`);
 
-        newSocket.on('connect', () => {
+        newSocket.onopen = () => {
           console.log('Connected to socket');
           setIsConnected(true);
-        });
+        };
 
-        newSocket.on('disconnect', () => {
+        newSocket.onclose = () => {
+          console.log('Disconnected from socket');
           setIsConnected(false);
-        });
+        };
 
-        newSocket.on('connect_error', (err: any) => {
-          console.error('Socket connection error:', err);
+        newSocket.onerror = (error: any) => {
+          console.error('Socket error:', error);
           setIsConnected(false);
-        });
+        };
 
-        newSocket.on('user_joined', (user: any) => {
-          addParticipant({ id: user.participant_id, display_name: user.display_name });
-        });
-
-        newSocket.on('user_left', (user: any) => {
-          removeParticipant(user.participant_id);
-        });
-
-        newSocket.on('new_message', (msg: any) => {
-          console.log('Received new_message:', msg);
-          addMessage(msg);
-        });
-
-        newSocket.on('user_typing', (data: any) => {
-          if (data.is_typing) {
-            setTypingUsers(prev => prev.includes(data.display_name) ? prev : [...prev, data.display_name]);
-          } else {
-            setTypingUsers(prev => prev.filter(name => name !== data.display_name));
+        newSocket.onmessage = (event: MessageEvent) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'user_joined') {
+              addParticipant({ id: data.participant_id, display_name: data.display_name });
+            } else if (data.type === 'user_left') {
+              removeParticipant(data.participant_id);
+            } else if (data.type === 'new_message') {
+              console.log('Received new_message:', data);
+              addMessage(data);
+            } else if (data.type === 'typing') {
+              if (data.is_typing) {
+                setTypingUsers(prev => prev.includes(data.display_name) ? prev : [...prev, data.display_name]);
+              } else {
+                setTypingUsers(prev => prev.filter(name => name !== data.display_name));
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse socket message', e);
           }
-        });
+        };
 
         setSocket(newSocket);
         setLoading(false);
@@ -109,7 +109,7 @@ export default function Room() {
 
     return () => {
       if (newSocket) {
-        newSocket.disconnect();
+        newSocket.close();
       }
       setSocket(null);
     };
@@ -131,20 +131,32 @@ export default function Room() {
       created_at: new Date().toISOString()
     });
     
-    socket.emit('message', { id: msgId, message: msgInput.trim() });
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: 'message',
+        id: msgId,
+        message: msgInput.trim()
+      }));
+      
+      socket.send(JSON.stringify({
+        type: 'typing',
+        is_typing: false
+      }));
+    }
     setMsgInput('');
-    socket.emit('typing', { is_typing: false });
   };
 
   let typingTimer: ReturnType<typeof setTimeout>;
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMsgInput(e.target.value);
-    if (!socket) return;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
     
-    socket.emit('typing', { is_typing: true });
+    socket.send(JSON.stringify({ type: 'typing', is_typing: true }));
     clearTimeout(typingTimer);
     typingTimer = setTimeout(() => {
-      socket.emit('typing', { is_typing: false });
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'typing', is_typing: false }));
+      }
     }, 1500);
   };
 

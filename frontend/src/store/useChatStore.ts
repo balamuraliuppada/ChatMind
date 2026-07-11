@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { Socket } from 'socket.io-client';
-
 export interface Participant {
   id: string;
   display_name: string;
@@ -16,8 +14,8 @@ export interface Message {
 }
 
 interface ChatState {
-  socket: Socket | null;
-  setSocket: (socket: Socket | null) => void;
+  socket: WebSocket | null;
+  setSocket: (socket: WebSocket | null) => void;
   
   participants: Participant[];
   setParticipants: (participants: Participant[]) => void;

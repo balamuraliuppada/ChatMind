@@ -4,12 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
-# pyrefly: ignore [missing-import]
-import socketio
-
 from app.core.config import settings
 from app.api.endpoints import router as api_router
-from app.socket.events import sio
 from app.database.database import engine, Base
 
 logging.basicConfig(level=logging.INFO)
@@ -48,15 +44,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Socket.IO ASGI app
-sio_asgi_app = socketio.ASGIApp(
-    socketio_server=sio,
-    other_asgi_app=app,
-    socketio_path='socket.io'
-)
+from app.api.websocket import router as ws_router
 
 # Mount API routes
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(ws_router)
 
 @app.get("/health/liveness")
 async def liveness():
