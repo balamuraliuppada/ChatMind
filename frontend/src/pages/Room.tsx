@@ -185,7 +185,10 @@ export default function Room() {
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* Top Header */}
-      <div className="shrink-0 bg-panel border-b border-white/10 p-4 flex items-center justify-between z-20">
+      <div 
+        className="shrink-0 bg-panel border-b border-white/10 p-3 sm:p-4 flex items-center justify-between z-20"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 0.75rem)' }}
+      >
         <div>
           <h2 className="font-bold text-xl text-white mb-1">{headerTitle}</h2>
           <div className="flex items-center gap-2 text-xs font-medium">
@@ -219,7 +222,7 @@ export default function Room() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-darker/30 relative">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 bg-darker/30 relative">
           {messages.map((msg, i) => {
             const isMe = msg.sender_id === currentUserId;
             const showName = i === 0 || messages[i-1].sender_id !== msg.sender_id;
@@ -236,7 +239,7 @@ export default function Room() {
                 )}
                 <div 
                   className={clsx(
-                    "px-4 py-2 rounded-2xl",
+                    "px-3 py-2 sm:px-4 sm:py-2 rounded-2xl text-[15px] sm:text-base leading-snug",
                     isMe 
                       ? "bg-primary text-white rounded-tr-sm" 
                       : "bg-panel border border-white/10 text-slate-200 rounded-tl-sm"
@@ -260,7 +263,10 @@ export default function Room() {
       </div>
 
       {/* Input Area */}
-      <div className="shrink-0 p-4 bg-panel border-t border-white/10 z-20">
+      <div 
+        className="shrink-0 p-3 sm:p-4 bg-panel border-t border-white/10 z-20"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.75rem)' }}
+      >
           <form onSubmit={handleSend} className="flex gap-2 max-w-4xl mx-auto relative">
             <input 
               type="text" 
