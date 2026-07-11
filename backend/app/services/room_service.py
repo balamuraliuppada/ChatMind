@@ -73,6 +73,12 @@ async def join_room(db: AsyncSession, data: RoomJoin) -> RoomDetailResponse:
     if room.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Room has expired")
         
+    # Check if room is full
+    participant_count_result = await db.execute(select(Participant).filter(Participant.room_id == room.id))
+    current_participants = participant_count_result.scalars().all()
+    if len(current_participants) >= 2:
+        raise HTTPException(status_code=403, detail="Room is full. Maximum 2 participants allowed.")
+        
     # 2. Create participant
     session_id = str(uuid4())
     participant = Participant(
