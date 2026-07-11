@@ -179,9 +179,6 @@ export default function Room() {
     return <div className="flex-1 flex items-center justify-center">Loading...</div>;
   }
 
-  const oppositePerson = participants.find(p => p.id !== currentUserId);
-  const headerTitle = oppositePerson ? oppositePerson.display_name : "Waiting for someone to join...";
-
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* Top Header */}
@@ -190,7 +187,7 @@ export default function Room() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 0.75rem)' }}
       >
         <div>
-          <h2 className="font-bold text-xl text-white mb-1">{headerTitle}</h2>
+          <h2 className="font-bold text-xl text-white mb-1">ChatMinds</h2>
           <div className="flex items-center gap-2 text-xs font-medium">
             <span className="text-slate-400">Code:</span>
             <span className="text-primary tracking-widest">{roomCode}</span>
