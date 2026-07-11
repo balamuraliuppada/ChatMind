@@ -180,7 +180,7 @@ export default function Room() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen max-w-4xl mx-auto w-full">
+    <div className="flex-1 min-h-0 flex flex-col h-full max-h-full overflow-hidden max-w-4xl mx-auto w-full">
       {/* Top Header */}
       <div className="bg-panel border-b border-white/10 p-4 flex items-center justify-between z-20">
         <div>
@@ -216,7 +216,7 @@ export default function Room() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-darker/30 relative">
+      <div className="flex-1 min-h-0 flex flex-col bg-darker/30 relative">
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {messages.map((msg, i) => {
             const isMe = msg.sender_id === currentUserId;
