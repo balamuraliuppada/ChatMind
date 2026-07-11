@@ -180,9 +180,9 @@ export default function Room() {
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col h-full max-h-full overflow-hidden max-w-4xl mx-auto w-full">
+    <div className="flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* Top Header */}
-      <div className="bg-panel border-b border-white/10 p-4 flex items-center justify-between z-20">
+      <div className="shrink-0 bg-panel border-b border-white/10 p-4 flex items-center justify-between z-20">
         <div>
           <h2 className="font-bold text-xl text-white mb-1">ChatMinds</h2>
           <div className="flex items-center gap-2 text-xs font-medium">
@@ -216,8 +216,7 @@ export default function Room() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 min-h-0 flex flex-col bg-darker/30 relative">
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-darker/30 relative">
           {messages.map((msg, i) => {
             const isMe = msg.sender_id === currentUserId;
             const showName = i === 0 || messages[i-1].sender_id !== msg.sender_id;
@@ -255,10 +254,10 @@ export default function Room() {
             </div>
           )}
           <div ref={messagesEndRef} />
-        </div>
+      </div>
 
-        {/* Input Area */}
-        <div className="p-4 bg-panel/50 border-t border-white/10 backdrop-blur-md">
+      {/* Input Area */}
+      <div className="shrink-0 p-4 bg-panel border-t border-white/10 z-20">
           <form onSubmit={handleSend} className="flex gap-2 max-w-4xl mx-auto relative">
             <input 
               type="text" 
@@ -275,7 +274,6 @@ export default function Room() {
               <Send size={18} className="ml-0.5" />
             </button>
           </form>
-        </div>
       </div>
     </div>
   );

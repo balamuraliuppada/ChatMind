@@ -6,7 +6,7 @@ import NotFound from './pages/NotFound';
 function App() {
   return (
     <Router>
-      <div className="h-[100dvh] flex flex-col font-sans bg-darker text-slate-100 overflow-hidden">
+      <div className="fixed inset-0 flex flex-col font-sans bg-darker text-slate-100 overflow-hidden">
         {/* Background blobs for premium glassmorphism effect */}
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px]" />
